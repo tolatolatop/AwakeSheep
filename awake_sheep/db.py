@@ -100,14 +100,14 @@ def create_commit_info(repo: Repo, commit_id: str) -> CommitInfo:
 
 
 def load_code_info(repo_path: str):
+    print('load code info of %s' % repo_path)
     repo = Repo(path=repo_path)
-    repo.iter_trees()
     db = get_db()
     cur = db.cursor()
     for file_path, file_name in list_all_file_in_traced(repo):
         code_info_list = get_code_info_from_repo(repo, file_path, file_name)
         code_info_iter = (tuple(code_info.dict().values()) for code_info in code_info_list)
-        cur.executemany('INSERT INTO SRC_CODE VALUES (?, ?, ?, ?, ?, ?, ?);', code_info_iter)
+        cur.executemany('INSERT OR IGNORE INTO SRC_CODE VALUES (?, ?, ?, ?, ?, ?, ?);', code_info_iter)
     db.commit()
     cur.close()
 

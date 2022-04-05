@@ -27,7 +27,7 @@ class TestCoreCase(unittest.TestCase):
         self.assertEqual('测试工程\n', commit_info.summary)
 
     def test_core(self):
-        cmd = ['', 'init', '--all', r'E:\python_project\f_page']
+        cmd = ['', 'init', '--all', r'E:\python_project']
         main(cmd)
         cmd = ['', 'query', 'index.html', '</body>']
         main(cmd)
