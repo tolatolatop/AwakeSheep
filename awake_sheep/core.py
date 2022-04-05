@@ -68,21 +68,38 @@ def query_code_info(file_path, code_snippet):
     return query_code_info_by_knight_mark(code_info.knight_mark)
 
 
+def local_repo_in_dir(path):
+    from awake_sheep.db import load_code_info
+
+    for repo_path in pathlib.Path(path).glob('**/.git'):
+        load_code_info(str(repo_path.parent))
+
+
 def main(args=None):
     if args is None:
         args = sys.argv.copy()
 
-    from awake_sheep.db import create_commit_info_table, load_code_info
+    from awake_sheep.db import create_commit_info_table, load_code_info, init_code_table
+    from awake_sheep.db import query_commit_info
+
     if args[1] == 'init':
-        repo_path = args[2]
+        init_code_table()
         create_commit_info_table()
-        load_code_info(repo_path)
+        if args[2] == '--all':
+            local_repo_in_dir(args[3])
+        else:
+            repo_path = args[2]
+            load_code_info(repo_path)
+
     if args[1] == 'query':
         file_path = args[2]
         code_snippet = args[3]
         code_info_iter = query_code_info(file_path, code_snippet)
         for code_info in code_info_iter:
             print(code_info)
+            repo = Repo(code_info.local_repo_path)
+            commit_info = query_commit_info(repo, code_info.commit_id)
+            print(commit_info)
 
 
 if __name__ == "__main__":

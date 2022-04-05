@@ -3,15 +3,19 @@ import unittest
 from git import Repo
 from awake_sheep.core import BaseCodeInfo, main
 from awake_sheep.db import load_code_info, query_code_info_by_knight_mark, query_commit_info, create_commit_info_table
+from awake_sheep.db import init_code_table
 
 
 class TestCoreCase(unittest.TestCase):
+
+    def setUp(self) -> None:
+        init_code_table()
+        create_commit_info_table()
 
     def test_load_code_info(self):
         repo_path = r'E:\python_project\f_page'
 
         repo = Repo(path=repo_path)
-        create_commit_info_table()
         load_code_info(repo_path)
 
         base_code_info = BaseCodeInfo(file_name='index.html', code='</body>')
@@ -23,6 +27,8 @@ class TestCoreCase(unittest.TestCase):
         self.assertEqual('测试工程\n', commit_info.summary)
 
     def test_core(self):
+        cmd = ['', 'init', '--all', r'E:\python_project\f_page']
+        main(cmd)
         cmd = ['', 'query', 'index.html', '</body>']
         main(cmd)
 

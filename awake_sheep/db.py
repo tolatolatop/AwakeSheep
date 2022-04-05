@@ -16,10 +16,15 @@ def get_db():
     return __db
 
 
-def create_code_table():
+def init_code_table():
     db = get_db()
     db.execute('''DROP TABLE IF EXISTS SRC_CODE;''')
     db.commit()
+    create_code_table()
+
+
+def create_code_table():
+    db = get_db()
     db.execute('''
 CREATE TABLE SRC_CODE (
     FILE_NAME    TEXT  NOT NULL,
@@ -98,7 +103,6 @@ def load_code_info(repo_path: str):
     repo = Repo(path=repo_path)
     repo.iter_trees()
     db = get_db()
-    create_code_table()
     cur = db.cursor()
     for file_path, file_name in list_all_file_in_traced(repo):
         code_info_list = get_code_info_from_repo(repo, file_path, file_name)
