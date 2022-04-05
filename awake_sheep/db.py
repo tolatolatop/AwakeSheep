@@ -25,6 +25,7 @@ CREATE TABLE SRC_CODE (
     FILE_NAME    TEXT  NOT NULL,
     CODE         TEXT  NOT NULL,
     LINE_NUM     CHAR(8) NOT NULL,
+    LOCAL_REPO_PATH CHAR(255) NOT NULL, 
     COMMIT_ID    CHAR(40) NOT NULL,
     KING_MARK    CHAR(40) PRIMARY KEY NOT NULL,
     KNIGHT_MARK  CHAR(40) NOT NULL
@@ -56,9 +57,10 @@ def query_code_info_by_knight_mark(knight_mark):
             file_name=data[0],
             code=data[1],
             line_num=data[2],
-            commit_id=data[3],
-            king_mark=data[4],
-            knight_mark=data[5],
+            local_repo_path=data[3],
+            commit_id=data[4],
+            king_mark=data[5],
+            knight_mark=data[6],
         )
 
 
@@ -101,7 +103,7 @@ def load_code_info(repo_path: str):
     for file_path, file_name in list_all_file_in_traced(repo):
         code_info_list = get_code_info_from_repo(repo, file_path, file_name)
         code_info_iter = (tuple(code_info.dict().values()) for code_info in code_info_list)
-        cur.executemany('INSERT INTO SRC_CODE VALUES (?, ?, ?, ?, ?, ?);', code_info_iter)
+        cur.executemany('INSERT INTO SRC_CODE VALUES (?, ?, ?, ?, ?, ?, ?);', code_info_iter)
     db.commit()
     cur.close()
 
@@ -117,7 +119,13 @@ def get_code_info_from_repo(repo, file_path, file_name):
     for commit_id, line_code_list in repo.blame(file=file_path, rev='HEAD'):
         for line_num, line_code in enumerate(line_code_list, start=start):
             try:
-                code_info = CodeInfo(file_name=file_name, code=line_code, line_num=line_num, commit_id=str(commit_id))
+                code_info = CodeInfo(
+                    file_name=file_name,
+                    code=line_code,
+                    line_num=line_num,
+                    local_repo_path=repo.working_dir,
+                    commit_id=str(commit_id)
+                )
                 yield code_info
             except ValidationError as e:
                 break
