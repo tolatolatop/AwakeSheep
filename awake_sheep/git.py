@@ -31,6 +31,15 @@ async def git_log_repo(repo_path: pathlib.Path, since=None):
         raise RuntimeError(cmd, stderr)
 
 
+async def get_log_all_file(repo_path: pathlib.Path, since=None):
+    all_file_info = {}
+    for file in repo_path.glob('**/*'):
+        commit_info = await git_log_file(file, repo_path, since)
+        if len(commit_info) > 0:
+            all_file_info[file] = commit_info
+    return all_file_info
+
+
 async def git_log_file(file_path: pathlib.Path, repo_path: pathlib.Path, since=None):
     cmd = get_git_log_cmd(file_path, since)
 
@@ -42,8 +51,9 @@ async def git_log_file(file_path: pathlib.Path, repo_path: pathlib.Path, since=N
 
 
 def get_commit_info(stdout_string):
-    regex = rb'###([a-z0-9]+):([^:]+):(\d+)\n(.*?)(?=###)?'
-    result = re.findall(regex, stdout_string, re.DOTALL)
+    print(stdout_string)
+    regex = re.compile(rb'###([a-z0-9]+):([^:]+):(\d+)\n(.*?)(?=###|$)', re.DOTALL)
+    result = regex.findall(stdout_string)
     return result
 
 
@@ -61,11 +71,11 @@ def get_git_log_cmd(file_path: pathlib.Path, since=None):
             since_args = f"--since={since}"
     else:
         since_args = ""
-    cmd = f'git log {file_path_args} --pretty={pretty} {since_args}'
+    cmd = f'git log {since_args} --pretty={pretty} {file_path_args}'
     return cmd
 
 
 if __name__ == "__main__":
-    f = git_log_repo(pathlib.Path('.'), '1')
+    f = get_log_all_file(pathlib.Path('.'))
     res = asyncio.run(f)
     print(res)
