@@ -5,6 +5,7 @@
 # @File    : git.py
 import asyncio
 import pathlib
+import re
 
 
 async def shell(cmd, cwd):
@@ -21,8 +22,23 @@ async def shell(cmd, cwd):
 
 
 async def git_log_repo(repo_path: pathlib.Path, since=None):
-    pretty = "%H%ae%ct%s"
+    pretty = "###%H:%ae:%ct%n%B"
     if since:
-        cmd = f'git log --since="{since}" --pretty={pretty}'
+        cmd = f'git log --pretty={pretty} --since="{since}" '
     else:
-        cmd = f'git log'
+        cmd = f'git log --pretty={pretty}'
+
+    ret, stdout, stderr = await shell(cmd, repo_path)
+    if ret == 0:
+        return get_commit_info(stdout)
+    else:
+        raise RuntimeError(cmd, stderr)
+
+
+def get_commit_info(stdout_string):
+    regex = r'###([a-z0-9]+):([^:]+):(\d+)\n(.*?)(?=###)'
+    result = re.findall(regex, stdout_string, re.DOTALL)
+    return result
+
+
+
