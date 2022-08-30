@@ -51,7 +51,6 @@ async def git_log_file(file_path: pathlib.Path, repo_path: pathlib.Path, since=N
 
 
 def get_commit_info(stdout_string):
-    print(stdout_string)
     regex = re.compile(rb'###([a-z0-9]+):([^:]+):(\d+)\n(.*?)(?=###|$)', re.DOTALL)
     result = regex.findall(stdout_string)
     return result
